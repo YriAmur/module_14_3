@@ -24,7 +24,8 @@ kb = ReplyKeyboardMarkup(
         [
             KeyboardButton(text='Рассчитать'),
             KeyboardButton(text='Информация')
-        ]
+        ],
+        [KeyboardButton(text='Купить')]
     ], resize_keyboard=True
 )
 
@@ -37,6 +38,16 @@ kb_inl = InlineKeyboardMarkup(
     ], resize_keyboard=True
 )
 
+kb_buy = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton('Produkt1', callback_data='buying'),
+            InlineKeyboardButton('Produkt2', callback_data='buying'),
+            InlineKeyboardButton('Produkt3', callback_data='buying'),
+            InlineKeyboardButton('Produkt4', callback_data='buying')
+        ]
+    ], resize_keyboard=True
+)
 # Функция /start
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -102,6 +113,22 @@ async def send_calories(message: types.Message, state: FSMContext):
     await message.answer(f'Ваша норма калорий: {bmr} калорий.')
 
     await state.finish()  # Завершение состояний
+
+@dp.message_handler(text=['Купить'])
+async def get_buying_list(message):
+    for i in range(1, 5):
+        await message.answer(f'Название: Product{i} | '
+                             f'Описание: vitamin {i} | '
+                             f'Цена: {i * 100}')
+        with open(f'files/{i}.jpeg', 'rb') as img:
+            await message.answer_photo(img)
+    await message.answer('Выберите продукт для покупки:',
+                         reply_markup=kb_buy)
+
+
+@dp.callback_query_handler(text='buying')
+async def send_confirm_message(call):
+    await call.message.answer('Вы успешно приобрели продукт!')
 
 @dp.message_handler()
 async def all_message(message: types.Message):
